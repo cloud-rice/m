@@ -3,16 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>나만의 수험장 Pro</title>
+<title>나만의 수험장 Pro Max</title>
 <style>
   body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
   .app-container { background: white; width: 100%; max-width: 600px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; min-height: 600px; display: flex; flex-direction: column; }
   .header { background: #2c3e50; color: white; padding: 15px; text-align: center; position: relative; }
   .home-btn { position: absolute; left: 15px; top: 18px; background: none; border: none; color: white; font-size: 18px; cursor: pointer; display: none; }
   
-  /* 홈 화면 */
+  /* 홈 화면 및 검색창 */
   .home-area { padding: 20px; flex: 1; }
-  .quiz-card { background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 15px; cursor: pointer; }
+  .search-box { width: 100%; padding: 12px; font-size: 16px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 15px; outline: none; transition: 0.2s; }
+  .search-box:focus { border-color: #4a90e2; }
+  
+  /* 내장 JSON 변환기 */
+  .tool-btn { width: 100%; padding: 12px; font-size: 14px; background: #ecf0f1; border: 1px solid #bdc3c7; border-radius: 8px; cursor: pointer; margin-bottom: 15px; color: #2c3e50; font-weight: bold; }
+  .converter-panel { display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-size: 14px; }
+  .converter-panel input, .converter-panel textarea { width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; }
+  
+  /* 퀴즈 목록 */
+  .quiz-card { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+  .quiz-card:hover { border-color: #4a90e2; }
   .quiz-title { font-size: 18px; font-weight: bold; color: #333; }
   .quiz-tags { font-size: 12px; color: #007bff; margin-top: 5px; }
 
@@ -20,9 +30,7 @@
   .score-board { display: flex; justify-content: space-around; background: #34495e; color: #fff; padding: 8px; font-size: 14px; }
   .score-item.correct { color: #2ecc71; }
   .score-item.wrong { color: #e74c3c; }
-
-  /* 설정 스위치 */
-  .settings-bar { padding: 10px 20px; background: #eee; font-size: 13px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+  .settings-bar { padding: 10px 20px; background: #eee; font-size: 13px; display: flex; justify-content: flex-end; align-items: center; }
 
   /* 퀴즈 영역 */
   .instruction { background: #eef5ff; padding: 12px; font-size: 14px; text-align: center; border-bottom: 1px solid #ddd; }
@@ -31,6 +39,10 @@
   .options { display: flex; flex-direction: column; gap: 10px; }
   .option-btn { padding: 15px; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; transition: 0.2s; }
   
+  /* 단답형 입력창 */
+  .short-answer-input { width: 100%; padding: 15px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; text-align: center; margin-bottom: 10px; outline: none; }
+  .submit-btn { width: 100%; padding: 15px; font-size: 16px; border: none; border-radius: 8px; background: #4a90e2; color: white; font-weight: bold; cursor: pointer; }
+
   /* 피드백 영역 (오답 시 노출) */
   .feedback-area { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; text-align: left; }
   .feedback-area.show { display: block; background: #fff3f3; border: 1px solid #facccc; }
@@ -44,7 +56,7 @@
 
   /* 결과 화면 */
   .result-area { padding: 30px; text-align: center; }
-  .wrong-item { text-align: left; background: #fff3f3; padding: 10px; border-radius: 5px; margin-bottom: 8px; font-size: 14px; }
+  .wrong-item { text-align: left; background: #fff3f3; padding: 12px; border-radius: 5px; margin-bottom: 8px; font-size: 14px; border: 1px solid #f5c6cb; }
 </style>
 </head>
 <body>
@@ -52,7 +64,7 @@
 <div class="app-container">
   <div class="header">
     <button class="home-btn" id="home-btn" onclick="goHome()">🏠</button>
-    <h2 id="main-title" style="margin:0; font-size: 1.2rem;">나만의 수험장 Pro</h2>
+    <h2 id="main-title" style="margin:0; font-size: 1.2rem;">나만의 수험장</h2>
   </div>
 
   <div class="score-board" id="score-board" style="display:none;">
@@ -61,14 +73,26 @@
     <span class="score-item wrong">오답: <span id="stat-wrong">0</span></span>
   </div>
 
-  <div class="settings-bar" id="settings-bar">
-    <label style="cursor:pointer;">
-      <input type="checkbox" id="pause-on-wrong" checked> 오답 시 멈춤 (정답 확인)
-    </label>
+  <div class="settings-bar" id="settings-bar" style="display:none;">
+    <label style="cursor:pointer;"><input type="checkbox" id="pause-on-wrong" checked> 오답 시 멈춤 및 해설 보기</label>
   </div>
 
   <div class="home-area" id="home-area">
-    <div id="quiz-list">불러오는 중...</div>
+    <button class="tool-btn" onclick="toggleConverter()">🛠️ CSV ➔ JSON 퀴즈 변환기 열기/닫기</button>
+    
+    <div class="converter-panel" id="converter-panel">
+      <input type="text" id="cv-title" placeholder="제목 (예: 정보처리기사 단답형)">
+      <input type="text" id="cv-tags" placeholder="태그 (쉼표구분, 예: 정처기,단답형)">
+      <input type="text" id="cv-inst" placeholder="안내문 (예: 알맞은 용어를 적으세요)">
+      <textarea id="cv-csv" rows="5" placeholder="여기에 대충 붙여넣으세요.&#13;&#10;[문제],[정답],[설명(선택)]&#13;&#10;예:&#13;&#10;운영체제 핵심,커널&#13;&#10;휘발성 메모리,RAM,전원이 꺼지면 날아감"></textarea>
+      <button class="submit-btn" style="padding:10px; margin-bottom:5px;" onclick="convertToJson()">🔻 JSON 생성하기 🔻</button>
+      <textarea id="cv-json" rows="4" readonly placeholder="여기에 JSON 코드가 생성됩니다." style="background:#eee;"></textarea>
+      <button class="submit-btn" style="background:#27ae60; padding:10px;" onclick="copyJson()">📋 코드 복사하기</button>
+    </div>
+
+    <input type="text" id="search-box" class="search-box" placeholder="🔍 제목이나 태그로 퀴즈 검색..." oninput="filterQuizzes()">
+    
+    <div id="quiz-list">데이터를 불러오는 중입니다...</div>
   </div>
 
   <div id="quiz-container" style="display: none;">
@@ -78,9 +102,10 @@
       <div class="options" id="options"></div>
       
       <div class="feedback-area" id="feedback-area">
-        <div style="color:#e74c3c; font-weight:bold; margin-bottom:5px;">틀렸습니다!</div>
-        <div>정답: <b id="correct-answer" style="color:#2ecc71;"></b></div>
-        <div id="answer-desc" style="font-size:0.9em; color:#666; margin-top:5px;"></div>
+        <div style="color:#e74c3c; font-weight:bold; margin-bottom:8px; font-size:18px;">❌ 틀렸습니다!</div>
+        <div style="margin-bottom:5px;">내가 고른 답: <span id="user-wrong-answer" style="color:#e74c3c; font-weight:bold; text-decoration:line-through;"></span></div>
+        <div style="margin-bottom:5px;">실제 정답: <span id="correct-answer" style="color:#2ecc71; font-weight:bold; font-size:1.1em;"></span></div>
+        <div id="answer-desc" style="font-size:0.9em; color:#666; margin-top:8px; padding-top:8px; border-top:1px dashed #ccc;"></div>
         <button class="next-btn" onclick="nextStep()">다음 문제로 ▷</button>
       </div>
     </div>
@@ -88,13 +113,14 @@
 
   <div class="result-area" id="result-area" style="display:none;">
     <h2 id="result-score-text"></h2>
-    <div id="wrong-list-container"></div>
-    <button class="next-btn" style="background:#27ae60;" onclick="copyResults()">📋 결과 복사</button>
+    <div id="wrong-list-container" style="max-height:400px; overflow-y:auto; margin-bottom:15px;"></div>
+    <button class="next-btn" style="background:#27ae60;" onclick="copyResults()">📋 오답 노트 복사</button>
     <button class="next-btn" style="background:#95a5a6;" onclick="goHome()">🏠 목록으로</button>
   </div>
 </div>
 
 <script>
+let globalQuizzes = []; // 검색을 위해 전체 목록 저장
 let currentQuiz = null;
 let currentIndex = 0;
 let stats = { correct: 0, wrong: 0 };
@@ -102,40 +128,90 @@ let wrongAnswers = [];
 let allAnswersPool = [];
 let isLocked = false;
 
+// [초기화] index.json 불러오기
 window.onload = () => {
   fetch('data/index.json').then(r => r.json()).then(data => {
-    const list = document.getElementById('quiz-list');
-    list.innerHTML = '';
-    data.quizzes.forEach(q => {
-      const div = document.createElement('div');
-      div.className = 'quiz-card';
-      div.onclick = () => loadQuiz(q.file);
-      div.innerHTML = `<div class="quiz-title">${q.title}</div><div class="quiz-tags">${q.tags.map(t=>'#'+t).join(' ')}</div>`;
-      list.appendChild(div);
-    });
-  }).catch(() => document.getElementById('quiz-list').innerText = "데이터 로드 실패");
+    globalQuizzes = data.quizzes;
+    renderQuizList(globalQuizzes);
+  }).catch(() => document.getElementById('quiz-list').innerHTML = "<p style='color:red;'>index.json을 불러오지 못했습니다.</p>");
 };
 
+// [검색 및 렌더링]
+function renderQuizList(list) {
+  const container = document.getElementById('quiz-list');
+  container.innerHTML = '';
+  if(list.length === 0) {
+    container.innerHTML = '<p style="color:#888; text-align:center;">검색 결과가 없습니다.</p>';
+    return;
+  }
+  list.forEach(q => {
+    const div = document.createElement('div');
+    div.className = 'quiz-card';
+    div.onclick = () => loadQuiz(q.file);
+    div.innerHTML = `<div class="quiz-title">${q.title}</div><div class="quiz-tags">${q.tags.map(t=>'#'+t).join(' ')}</div>`;
+    container.appendChild(div);
+  });
+}
+
+function filterQuizzes() {
+  const keyword = document.getElementById('search-box').value.toLowerCase();
+  const filtered = globalQuizzes.filter(q => 
+    q.title.toLowerCase().includes(keyword) || 
+    q.tags.some(t => t.toLowerCase().includes(keyword))
+  );
+  renderQuizList(filtered);
+}
+
+// [툴] CSV -> JSON 변환기
+function toggleConverter() {
+  const panel = document.getElementById('converter-panel');
+  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+}
+
+function convertToJson() {
+  const title = document.getElementById('cv-title').value.trim() || "새로운 암기장";
+  const tags = document.getElementById('cv-tags').value.split(',').map(t=>t.trim()).filter(t=>t);
+  const inst = document.getElementById('cv-inst').value.trim();
+  const csvLines = document.getElementById('cv-csv').value.trim().split('\n');
+  
+  let questions = [];
+  csvLines.forEach(line => {
+    if(!line.trim()) return;
+    const parts = line.split(',');
+    let qObj = { q: parts[0]?.trim() || "", a: parts[1]?.trim() || "" };
+    if(parts[2] && parts[2].trim() !== "") qObj.desc = parts[2].trim();
+    questions.push(qObj);
+  });
+
+  const finalJson = { title, tags, instruction: inst, questions };
+  document.getElementById('cv-json').value = JSON.stringify(finalJson, null, 2);
+}
+
+function copyJson() {
+  const text = document.getElementById('cv-json').value;
+  if(!text) return alert('먼저 JSON을 생성해주세요.');
+  navigator.clipboard.writeText(text).then(() => alert('✅ JSON 코드가 복사되었습니다!\nGithub에서 새 .json 파일을 만들고 붙여넣으세요.'));
+}
+
+// [퀴즈 로직]
 function loadQuiz(file) {
   fetch(file).then(r => r.json()).then(data => {
     currentQuiz = data;
     startQuiz();
-  });
+  }).catch(err => alert("퀴즈 파일을 읽어올 수 없습니다."));
 }
 
 function startQuiz() {
-  currentIndex = 0;
-  stats = { correct: 0, wrong: 0 };
-  wrongAnswers = [];
-  isLocked = false;
+  currentIndex = 0; stats = { correct: 0, wrong: 0 }; wrongAnswers = []; isLocked = false;
   allAnswersPool = [...new Set(currentQuiz.questions.map(q => q.a))];
-  currentQuiz.questions.sort(() => Math.random() - 0.5);
+  currentQuiz.questions.sort(() => Math.random() - 0.5); // 문제 섞기
 
   document.getElementById('home-area').style.display = 'none';
-  document.getElementById('settings-bar').style.display = 'none';
   document.getElementById('quiz-container').style.display = 'block';
   document.getElementById('score-board').style.display = 'flex';
+  document.getElementById('settings-bar').style.display = 'flex';
   document.getElementById('home-btn').style.display = 'block';
+  
   document.getElementById('main-title').innerText = currentQuiz.title;
   document.getElementById('instruction').innerText = currentQuiz.instruction;
   
@@ -150,10 +226,7 @@ function updateScore() {
 }
 
 function showQuestion() {
-  if (currentIndex >= currentQuiz.questions.length) {
-    showResults();
-    return;
-  }
+  if (currentIndex >= currentQuiz.questions.length) { showResults(); return; }
   isLocked = false;
   const q = currentQuiz.questions[currentIndex];
   document.getElementById('question').innerText = q.q;
@@ -163,44 +236,79 @@ function showQuestion() {
   options.innerHTML = '';
   options.style.display = 'flex';
 
-  // 보기 생성 (4지선다 기준 오답 섞기)
-  let pool = allAnswersPool.filter(a => a !== q.a).sort(() => Math.random() - 0.5);
-  let choices = [q.a, ...pool.slice(0, 3)].sort(() => Math.random() - 0.5);
-
-  choices.forEach(c => {
+  const tags = currentQuiz.tags || [];
+  
+  // 단답형 모드
+  if (tags.includes("단답형")) {
+    const input = document.createElement('input');
+    input.type = 'text'; input.className = 'short-answer-input'; input.placeholder = '정답 입력';
     const btn = document.createElement('button');
-    btn.className = 'option-btn';
-    btn.innerText = c;
-    btn.onclick = () => checkAnswer(c, btn);
-    options.appendChild(btn);
-  });
+    btn.className = 'submit-btn'; btn.innerText = '확인';
+    
+    input.addEventListener("keypress", (e) => { if (e.key === "Enter") btn.click(); });
+    btn.onclick = () => checkAnswer(input.value.trim(), btn);
+    
+    options.appendChild(input); options.appendChild(btn);
+    setTimeout(() => input.focus(), 100);
+  } 
+  // OX 모드
+  else if (tags.includes("OX") || tags.includes("ox")) {
+    ['O', 'X'].forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn'; btn.innerText = opt;
+      btn.onclick = () => checkAnswer(opt, btn);
+      options.appendChild(btn);
+    });
+  } 
+  // 다지선다 모드
+  else {
+    let count = 4;
+    if(tags.includes("이지선다")) count = 2;
+    if(tags.includes("삼지선다")) count = 3;
+    if(tags.includes("오지선다")) count = 5;
+
+    let pool = allAnswersPool.filter(a => a !== q.a).sort(() => Math.random() - 0.5);
+    let choices = [q.a, ...pool.slice(0, count - 1)].sort(() => Math.random() - 0.5);
+
+    choices.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn'; btn.innerText = c;
+      btn.onclick = () => checkAnswer(c, btn);
+      options.appendChild(btn);
+    });
+  }
   updateScore();
 }
 
-function checkAnswer(ans, btn) {
+function checkAnswer(ans, targetBtn) {
   if (isLocked) return;
+  if (!ans && targetBtn.innerText === '확인') return; // 단답형 빈칸 방지
   isLocked = true;
+  
   const q = currentQuiz.questions[currentIndex];
-  const isCorrect = (ans === q.a);
+  // 띄어쓰기 무시하고 정답 비교
+  const isCorrect = (ans.replace(/\s+/g, '') === q.a.replace(/\s+/g, ''));
   const pauseOn = document.getElementById('pause-on-wrong').checked;
 
   if (isCorrect) {
-    btn.classList.add('anim-correct');
+    targetBtn.classList.add('anim-correct');
     stats.correct++;
-    setTimeout(nextStep, 400);
+    setTimeout(nextStep, 350);
   } else {
-    btn.classList.add('anim-incorrect');
+    targetBtn.classList.add('anim-incorrect');
     stats.wrong++;
-    wrongAnswers.push(q);
+    
+    // 핵심! 내가 고른 답을 객체에 함께 저장
+    wrongAnswers.push({ ...q, userAnswer: ans });
     
     if (pauseOn) {
-      // 멈춤 모드: 정답 보여주기
       document.getElementById('options').style.display = 'none';
-      document.getElementById('correct-answer').innerText = q.a;
-      document.getElementById('answer-desc').innerText = q.desc || "";
+      document.getElementById('user-wrong-answer').innerText = ans; // 내가 쓴 답 표시
+      document.getElementById('correct-answer').innerText = q.a;    // 실제 정답 표시
+      document.getElementById('answer-desc').innerText = q.desc || "제공된 해설이 없습니다.";
       document.getElementById('feedback-area').classList.add('show');
     } else {
-      setTimeout(nextStep, 400);
+      setTimeout(nextStep, 350);
     }
   }
 }
@@ -213,26 +321,51 @@ function nextStep() {
 function showResults() {
   document.getElementById('quiz-container').style.display = 'none';
   document.getElementById('score-board').style.display = 'none';
+  document.getElementById('settings-bar').style.display = 'none';
   document.getElementById('result-area').style.display = 'block';
   
   const rate = Math.round((stats.correct / currentQuiz.questions.length) * 100);
-  document.getElementById('result-score-text').innerText = `결과: ${rate}% (${stats.correct}/${currentQuiz.questions.length})`;
+  document.getElementById('result-score-text').innerText = `최종 정답률: ${rate}% (${stats.correct}/${currentQuiz.questions.length})`;
   
   const container = document.getElementById('wrong-list-container');
-  container.innerHTML = '<h4>오답 목록</h4>';
-  wrongAnswers.forEach(w => {
-    container.innerHTML += `<div class="wrong-item"><b>Q: ${w.q}</b><br><span style="color:#2ecc71;">A: ${w.a}</span></div>`;
-  });
-}
-
-function goHome() {
-  location.reload();
+  if(wrongAnswers.length === 0){
+    container.innerHTML = '<div style="padding:20px; font-size:18px; color:#27ae60; font-weight:bold;">🎉 완벽합니다! 100점입니다.</div>';
+  } else {
+    container.innerHTML = '<h4 style="text-align:left; color:#e74c3c;">[오답 노트]</h4>';
+    wrongAnswers.forEach(w => {
+      container.innerHTML += `
+        <div class="wrong-item">
+          <div style="font-weight:bold; margin-bottom:5px;">Q. ${w.q}</div>
+          <div style="color:#e74c3c; font-size:0.9em; text-decoration:line-through;">내 답: ${w.userAnswer}</div>
+          <div style="color:#2ecc71; font-weight:bold;">정답: ${w.a}</div>
+          ${w.desc ? `<div style="font-size:0.85em; color:#666; margin-top:5px;">💡 ${w.desc}</div>` : ''}
+        </div>`;
+    });
+  }
 }
 
 function copyResults() {
-  let txt = `${currentQuiz.title} 결과: ${stats.correct}/${currentQuiz.questions.length}\n\n[오답]\n`;
-  wrongAnswers.forEach(w => txt += `- ${w.q} (정답: ${w.a})\n`);
-  navigator.clipboard.writeText(txt).then(() => alert("복사되었습니다!"));
+  let txt = `[${currentQuiz.title}] 테스트 결과\n`;
+  txt += `정답률: ${Math.round((stats.correct / currentQuiz.questions.length) * 100)}% (${stats.correct}/${currentQuiz.questions.length})\n\n`;
+  
+  if(wrongAnswers.length > 0) {
+    txt += "--- 오답 노트 ---\n";
+    wrongAnswers.forEach(w => {
+      txt += `Q. ${w.q}\n`;
+      txt += `❌ 내가 고른 답: ${w.userAnswer}\n`;
+      txt += `✅ 실제 정답: ${w.a}\n`;
+      if(w.desc) txt += `💡 해설: ${w.desc}\n`;
+      txt += "\n";
+    });
+  } else {
+    txt += "틀린 문제가 없습니다! 🎉";
+  }
+  
+  navigator.clipboard.writeText(txt).then(() => alert("오답 노트가 클립보드에 복사되었습니다!\n노션이나 카톡에 붙여넣기 하세요."));
+}
+
+function goHome() {
+  location.reload(); // 가장 깔끔하게 초기화하기 위해 새로고침
 }
 </script>
 </body>
