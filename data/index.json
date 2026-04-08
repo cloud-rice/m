@@ -1,0 +1,16 @@
+{
+  "quizzes": [
+    {
+      "id": "q1",
+      "title": "예시",
+      "tags": ["소프트웨어공학", "삼지선다", "난이도2"],
+      "file": "data/example.json"
+    },
+    {
+      "id": "q2",
+      "title": "아직 없음 예시",
+      "tags": ["한국사", "단답형"],
+      "file": "data/no_example.json"
+    }
+  ]
+}
