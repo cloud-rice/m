@@ -3,286 +3,236 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>나만의 수험장</title>
+<title>나만의 수험장 Pro</title>
 <style>
   body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
-  .app-container { background: white; width: 100%; max-width: 600px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; min-height: 500px; }
-  .header { background: #2c3e50; color: white; padding: 20px; text-align: center; position: relative; }
-  .home-btn { position: absolute; left: 15px; top: 20px; background: none; border: none; color: white; font-size: 16px; cursor: pointer; display: none; }
+  .app-container { background: white; width: 100%; max-width: 600px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; min-height: 600px; display: flex; flex-direction: column; }
+  .header { background: #2c3e50; color: white; padding: 15px; text-align: center; position: relative; }
+  .home-btn { position: absolute; left: 15px; top: 18px; background: none; border: none; color: white; font-size: 18px; cursor: pointer; display: none; }
   
-  .home-area { padding: 20px; }
-  .quiz-card { background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 15px; cursor: pointer; transition: 0.2s; }
-  .quiz-card:active { background: #e9ecef; }
-  .quiz-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 5px; }
-  .quiz-tags { font-size: 12px; color: #007bff; }
+  /* 홈 화면 */
+  .home-area { padding: 20px; flex: 1; }
+  .quiz-card { background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 15px; cursor: pointer; }
+  .quiz-title { font-size: 18px; font-weight: bold; color: #333; }
+  .quiz-tags { font-size: 12px; color: #007bff; margin-top: 5px; }
 
-  .instruction { background: #eef5ff; padding: 15px; font-size: 14px; color: #333; text-align: center; border-bottom: 1px solid #ddd; }
-  .quiz-area { padding: 40px 20px; text-align: center; }
-  .question { font-size: 26px; font-weight: bold; margin-bottom: 40px; color: #222; word-break: keep-all; }
-  
+  /* 상단 실시간 점수판 */
+  .score-board { display: flex; justify-content: space-around; background: #34495e; color: #fff; padding: 8px; font-size: 14px; }
+  .score-item.correct { color: #2ecc71; }
+  .score-item.wrong { color: #e74c3c; }
+
+  /* 설정 스위치 */
+  .settings-bar { padding: 10px 20px; background: #eee; font-size: 13px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+
+  /* 퀴즈 영역 */
+  .instruction { background: #eef5ff; padding: 12px; font-size: 14px; text-align: center; border-bottom: 1px solid #ddd; }
+  .quiz-area { padding: 30px 20px; text-align: center; flex: 1; }
+  .question { font-size: 24px; font-weight: bold; margin-bottom: 30px; word-break: keep-all; }
   .options { display: flex; flex-direction: column; gap: 10px; }
-  .option-btn { padding: 15px; font-size: 16px; border: none; border-radius: 8px; background: #f0f0f0; cursor: pointer; transition: background-color 0.2s; }
+  .option-btn { padding: 15px; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; transition: 0.2s; }
   
-  /* 단답형 입력창 스타일 */
-  .short-answer-input { width: 100%; padding: 15px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; text-align: center; margin-bottom: 10px; outline: none; transition: 0.2s; }
-  .short-answer-input:focus { border-color: #4a90e2; }
-  .submit-btn { width: 100%; padding: 15px; font-size: 16px; border: none; border-radius: 8px; background: #4a90e2; color: white; font-weight: bold; cursor: pointer; }
+  /* 피드백 영역 (오답 시 노출) */
+  .feedback-area { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; text-align: left; }
+  .feedback-area.show { display: block; background: #fff3f3; border: 1px solid #facccc; }
+  .next-btn { width: 100%; padding: 15px; background: #2c3e50; color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 15px; cursor: pointer; }
 
   /* 애니메이션 */
-  @keyframes pulse {
-    0% { transform: scale(1); background-color: #f0f0f0; }
-    50% { transform: scale(1.05); background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
-    100% { transform: scale(1); background-color: #f0f0f0; }
-  }
-  .anim-correct { animation: pulse 0.3s ease; pointer-events: none; }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); background: #d4edda; } }
+  .anim-correct { animation: pulse 0.3s ease; border-color: #28a745 !important; }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  .anim-incorrect { animation: shake 0.3s ease; border-color: #dc3545 !important; background: #f8d7da !important; }
 
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); background-color: #f0f0f0; }
-    20%, 60% { transform: translateX(-8px); background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-    40%, 80% { transform: translateX(8px); background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-  }
-  .anim-incorrect { animation: shake 0.3s ease; pointer-events: none; }
-
+  /* 결과 화면 */
   .result-area { padding: 30px; text-align: center; }
-  .action-btn { width: 100%; padding: 15px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; font-weight: bold; }
-  .btn-copy { background: #27ae60; color: white; }
-  .btn-retry { background: #ecf0f1; color: #333; }
+  .wrong-item { text-align: left; background: #fff3f3; padding: 10px; border-radius: 5px; margin-bottom: 8px; font-size: 14px; }
 </style>
 </head>
 <body>
 
 <div class="app-container">
   <div class="header">
-    <button class="home-btn" id="home-btn" onclick="goHome()">🏠 목록</button>
-    <h2 id="main-title" style="margin:0;">나만의 수험장</h2>
+    <button class="home-btn" id="home-btn" onclick="goHome()">🏠</button>
+    <h2 id="main-title" style="margin:0; font-size: 1.2rem;">나만의 수험장 Pro</h2>
+  </div>
+
+  <div class="score-board" id="score-board" style="display:none;">
+    <span id="stat-progress">0/0</span>
+    <span class="score-item correct">정답: <span id="stat-correct">0</span></span>
+    <span class="score-item wrong">오답: <span id="stat-wrong">0</span></span>
+  </div>
+
+  <div class="settings-bar" id="settings-bar">
+    <label style="cursor:pointer;">
+      <input type="checkbox" id="pause-on-wrong" checked> 오답 시 멈춤 (정답 확인)
+    </label>
   </div>
 
   <div class="home-area" id="home-area">
-    <div id="quiz-list">데이터를 불러오는 중입니다...</div>
+    <div id="quiz-list">불러오는 중...</div>
   </div>
 
   <div id="quiz-container" style="display: none;">
     <div class="instruction" id="instruction"></div>
-    <div class="quiz-area" id="quiz-area">
-      <div id="progress" style="color:#888; margin-bottom:10px;"></div>
+    <div class="quiz-area">
       <div class="question" id="question"></div>
       <div class="options" id="options"></div>
+      
+      <div class="feedback-area" id="feedback-area">
+        <div style="color:#e74c3c; font-weight:bold; margin-bottom:5px;">틀렸습니다!</div>
+        <div>정답: <b id="correct-answer" style="color:#2ecc71;"></b></div>
+        <div id="answer-desc" style="font-size:0.9em; color:#666; margin-top:5px;"></div>
+        <button class="next-btn" onclick="nextStep()">다음 문제로 ▷</button>
+      </div>
     </div>
   </div>
 
   <div class="result-area" id="result-area" style="display:none;">
-    <h2>테스트 결과</h2>
-    <h1 id="score"></h1>
-    <div id="wrong-list" style="text-align:left; background:#fff3f3; padding:15px; border-radius:8px; margin-top:20px; max-height:300px; overflow-y:auto;"></div>
-    <button class="action-btn btn-copy" onclick="copyResults()">📋 결과 복사</button>
-    <button class="action-btn btn-retry" onclick="goHome()">🏠 다른 퀴즈 풀기</button>
+    <h2 id="result-score-text"></h2>
+    <div id="wrong-list-container"></div>
+    <button class="next-btn" style="background:#27ae60;" onclick="copyResults()">📋 결과 복사</button>
+    <button class="next-btn" style="background:#95a5a6;" onclick="goHome()">🏠 목록으로</button>
   </div>
 </div>
 
 <script>
-let currentQuizData = null;
+let currentQuiz = null;
 let currentIndex = 0;
+let stats = { correct: 0, wrong: 0 };
 let wrongAnswers = [];
-let isAnimating = false;
-let allAnswersPool = []; // 오답 생성을 위한 전체 정답 풀
+let allAnswersPool = [];
+let isLocked = false;
 
 window.onload = () => {
-  fetch('data/index.json')
-    .then(response => response.json())
-    .then(data => renderQuizList(data.quizzes))
-    .catch(err => document.getElementById('quiz-list').innerHTML = `<p style="color:red;">목록을 불러오지 못했습니다.</p>`);
+  fetch('data/index.json').then(r => r.json()).then(data => {
+    const list = document.getElementById('quiz-list');
+    list.innerHTML = '';
+    data.quizzes.forEach(q => {
+      const div = document.createElement('div');
+      div.className = 'quiz-card';
+      div.onclick = () => loadQuiz(q.file);
+      div.innerHTML = `<div class="quiz-title">${q.title}</div><div class="quiz-tags">${q.tags.map(t=>'#'+t).join(' ')}</div>`;
+      list.appendChild(div);
+    });
+  }).catch(() => document.getElementById('quiz-list').innerText = "데이터 로드 실패");
 };
 
-function renderQuizList(quizzes) {
-  const listContainer = document.getElementById('quiz-list');
-  listContainer.innerHTML = '';
-  quizzes.forEach(quiz => {
-    const card = document.createElement('div');
-    card.className = 'quiz-card';
-    card.onclick = () => loadQuiz(quiz.file);
-    card.innerHTML = `<div class="quiz-title">${quiz.title}</div><div class="quiz-tags">${quiz.tags.map(t => `#${t}`).join(' ')}</div>`;
-    listContainer.appendChild(card);
+function loadQuiz(file) {
+  fetch(file).then(r => r.json()).then(data => {
+    currentQuiz = data;
+    startQuiz();
   });
 }
 
-function loadQuiz(filePath) {
-  fetch(filePath)
-    .then(response => response.json())
-    .then(data => {
-      currentQuizData = data;
-      startQuiz();
-    })
-    .catch(err => alert("데이터를 불러오는데 실패했습니다."));
-}
-
 function startQuiz() {
-  document.getElementById('home-area').style.display = 'none';
-  document.getElementById('result-area').style.display = 'none';
-  document.getElementById('quiz-container').style.display = 'block';
-  document.getElementById('home-btn').style.display = 'block';
-  document.getElementById('quiz-area').style.display = 'block';
-
-  document.getElementById('main-title').innerText = currentQuizData.title;
-  document.getElementById('instruction').innerText = currentQuizData.instruction;
-  
   currentIndex = 0;
+  stats = { correct: 0, wrong: 0 };
   wrongAnswers = [];
-  isAnimating = false;
+  isLocked = false;
+  allAnswersPool = [...new Set(currentQuiz.questions.map(q => q.a))];
+  currentQuiz.questions.sort(() => Math.random() - 0.5);
 
-  // 전체 문항 섞기
-  currentQuizData.questions.sort(() => Math.random() - 0.5);
-  // 전체 정답 풀 생성 (중복 제거)
-  allAnswersPool = [...new Set(currentQuizData.questions.map(q => q.a))];
+  document.getElementById('home-area').style.display = 'none';
+  document.getElementById('settings-bar').style.display = 'none';
+  document.getElementById('quiz-container').style.display = 'block';
+  document.getElementById('score-board').style.display = 'flex';
+  document.getElementById('home-btn').style.display = 'block';
+  document.getElementById('main-title').innerText = currentQuiz.title;
+  document.getElementById('instruction').innerText = currentQuiz.instruction;
   
+  updateScore();
   showQuestion();
 }
 
+function updateScore() {
+  document.getElementById('stat-progress').innerText = `${currentIndex + 1}/${currentQuiz.questions.length}`;
+  document.getElementById('stat-correct').innerText = stats.correct;
+  document.getElementById('stat-wrong').innerText = stats.wrong;
+}
+
 function showQuestion() {
-  if (currentIndex >= currentQuizData.questions.length) {
+  if (currentIndex >= currentQuiz.questions.length) {
     showResults();
     return;
   }
-
-  isAnimating = false;
-  const currentQ = currentQuizData.questions[currentIndex];
-  document.getElementById('progress').innerText = `${currentIndex + 1} / ${currentQuizData.questions.length}`;
-  document.getElementById('question').innerText = currentQ.q;
-
-  const optionsContainer = document.getElementById('options');
-  optionsContainer.innerHTML = '';
-
-  const tags = currentQuizData.tags;
+  isLocked = false;
+  const q = currentQuiz.questions[currentIndex];
+  document.getElementById('question').innerText = q.q;
+  document.getElementById('feedback-area').classList.remove('show');
   
-  // 1. 단답형 모드
-  if (tags.includes("단답형")) {
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'short-answer-input';
-    input.placeholder = '정답을 입력하세요';
-    
-    const submitBtn = document.createElement('button');
-    submitBtn.className = 'submit-btn';
-    submitBtn.innerText = '확인';
-    
-    // 엔터키 지원
-    input.addEventListener("keypress", function(event) {
-      if (event.key === "Enter") { event.preventDefault(); submitBtn.click(); }
-    });
+  const options = document.getElementById('options');
+  options.innerHTML = '';
+  options.style.display = 'flex';
 
-    submitBtn.onclick = (e) => checkAnswer(input.value.trim(), currentQ, input);
-    
-    optionsContainer.appendChild(input);
-    optionsContainer.appendChild(submitBtn);
-    setTimeout(() => input.focus(), 100); // 자동으로 키보드 띄우기
-  } 
-  // 2. OX 모드
-  else if (tags.includes("OX") || tags.includes("ox")) {
-    ['O', 'X'].forEach(opt => {
-      const btn = document.createElement('button');
-      btn.className = 'option-btn';
-      btn.innerText = opt;
-      btn.onclick = (e) => checkAnswer(opt, currentQ, e.currentTarget);
-      optionsContainer.appendChild(btn);
-    });
-  }
-  // 3. N지선다 모드
-  else {
-    let choiceCount = 4; // 기본값 4지선다
-    if (tags.includes("이지선다")) choiceCount = 2;
-    if (tags.includes("삼지선다")) choiceCount = 3;
-    if (tags.includes("사지선다")) choiceCount = 4;
-    if (tags.includes("오지선다")) choiceCount = 5;
+  // 보기 생성 (4지선다 기준 오답 섞기)
+  let pool = allAnswersPool.filter(a => a !== q.a).sort(() => Math.random() - 0.5);
+  let choices = [q.a, ...pool.slice(0, 3)].sort(() => Math.random() - 0.5);
 
-    // 정답 제외한 다른 오답들을 랜덤으로 가져옴
-    let wrongOptions = allAnswersPool.filter(a => a !== currentQ.a).sort(() => Math.random() - 0.5);
+  choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerText = c;
+    btn.onclick = () => checkAnswer(c, btn);
+    options.appendChild(btn);
+  });
+  updateScore();
+}
+
+function checkAnswer(ans, btn) {
+  if (isLocked) return;
+  isLocked = true;
+  const q = currentQuiz.questions[currentIndex];
+  const isCorrect = (ans === q.a);
+  const pauseOn = document.getElementById('pause-on-wrong').checked;
+
+  if (isCorrect) {
+    btn.classList.add('anim-correct');
+    stats.correct++;
+    setTimeout(nextStep, 400);
+  } else {
+    btn.classList.add('anim-incorrect');
+    stats.wrong++;
+    wrongAnswers.push(q);
     
-    // 정답 + 오답 N-1개
-    let finalOptions = [currentQ.a];
-    for (let i = 0; i < choiceCount - 1; i++) {
-      if (wrongOptions[i]) finalOptions.push(wrongOptions[i]);
+    if (pauseOn) {
+      // 멈춤 모드: 정답 보여주기
+      document.getElementById('options').style.display = 'none';
+      document.getElementById('correct-answer').innerText = q.a;
+      document.getElementById('answer-desc').innerText = q.desc || "";
+      document.getElementById('feedback-area').classList.add('show');
+    } else {
+      setTimeout(nextStep, 400);
     }
-
-    // 선택지 최종 섞기
-    finalOptions.sort(() => Math.random() - 0.5);
-
-    finalOptions.forEach(opt => {
-      const btn = document.createElement('button');
-      btn.className = 'option-btn';
-      btn.innerText = opt;
-      btn.onclick = (e) => checkAnswer(opt, currentQ, e.currentTarget);
-      optionsContainer.appendChild(btn);
-    });
   }
 }
 
-function checkAnswer(selected, questionObj, targetElement) {
-  if (isAnimating) return;
-  if (!selected) return; // 단답형에서 빈칸 방지
-  isAnimating = true; 
-
-  // 단답형의 경우 띄어쓰기 무시하고 비교
-  const isCorrect = (selected.replace(/\s+/g, '') === questionObj.a.replace(/\s+/g, ''));
-
-  if (isCorrect) {
-    targetElement.classList.add('anim-correct');
-  } else {
-    targetElement.classList.add('anim-incorrect');
-    // 단답형 오답일 경우 내가 쓴 오답도 기록
-    wrongAnswers.push({ ...questionObj, userInput: selected });
-  }
-
-  setTimeout(() => {
-    currentIndex++;
-    showQuestion();
-  }, 400); // 입력창 애니메이션을 볼 수 있게 시간을 살짝 늘림(0.4초)
+function nextStep() {
+  currentIndex++;
+  showQuestion();
 }
 
 function showResults() {
   document.getElementById('quiz-container').style.display = 'none';
+  document.getElementById('score-board').style.display = 'none';
   document.getElementById('result-area').style.display = 'block';
-
-  const total = currentQuizData.questions.length;
-  const correct = total - wrongAnswers.length;
-  const rate = Math.round((correct / total) * 100);
-
-  document.getElementById('score').innerText = `정답률: ${rate}% (${correct}/${total})`;
-
-  if (wrongAnswers.length > 0) {
-    let wrongHTML = '<strong>[틀린 문항 복습]</strong><br><br>';
-    wrongAnswers.forEach(item => {
-      let userAns = item.userInput ? ` (나의 답: ${item.userInput})` : "";
-      wrongHTML += `<div style="margin-bottom:10px; border-bottom:1px dashed #ccc; padding-bottom:5px;">
-        ❌ <b>${item.q}</b><br>
-        <span style="color:#27ae60;">정답: ${item.a}</span><span style="color:#e74c3c; font-size:0.9em;">${userAns}</span>
-        ${item.desc ? `<br><span style="color:#7f8c8d; font-size:0.8em;">설명: ${item.desc}</span>` : ""}
-      </div>`;
-    });
-    document.getElementById('wrong-list').innerHTML = wrongHTML;
-  } else {
-    document.getElementById('wrong-list').innerHTML = '🎉 완벽합니다! 다 맞췄어요.';
-  }
-}
-
-function copyResults() {
-  const scoreText = document.getElementById('score').innerText;
-  let textToCopy = `${currentQuizData.title} 테스트 결과\n${scoreText}\n\n`;
-  if (wrongAnswers.length > 0) {
-    textToCopy += "[오답 노트]\n";
-    wrongAnswers.forEach(item => {
-      textToCopy += `Q. ${item.q}\nA. ${item.a}\n`;
-    });
-  } else {
-    textToCopy += "모두 정답입니다!";
-  }
-  navigator.clipboard.writeText(textToCopy).then(() => alert("결과가 복사되었습니다!"));
+  
+  const rate = Math.round((stats.correct / currentQuiz.questions.length) * 100);
+  document.getElementById('result-score-text').innerText = `결과: ${rate}% (${stats.correct}/${currentQuiz.questions.length})`;
+  
+  const container = document.getElementById('wrong-list-container');
+  container.innerHTML = '<h4>오답 목록</h4>';
+  wrongAnswers.forEach(w => {
+    container.innerHTML += `<div class="wrong-item"><b>Q: ${w.q}</b><br><span style="color:#2ecc71;">A: ${w.a}</span></div>`;
+  });
 }
 
 function goHome() {
-  document.getElementById('quiz-container').style.display = 'none';
-  document.getElementById('result-area').style.display = 'none';
-  document.getElementById('home-btn').style.display = 'none';
-  document.getElementById('home-area').style.display = 'block';
-  document.getElementById('main-title').innerText = "나만의 수험장";
+  location.reload();
+}
+
+function copyResults() {
+  let txt = `${currentQuiz.title} 결과: ${stats.correct}/${currentQuiz.questions.length}\n\n[오답]\n`;
+  wrongAnswers.forEach(w => txt += `- ${w.q} (정답: ${w.a})\n`);
+  navigator.clipboard.writeText(txt).then(() => alert("복사되었습니다!"));
 }
 </script>
 </body>
