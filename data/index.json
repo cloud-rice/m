@@ -7,16 +7,52 @@
       "file": "data/example.json"
     },
     {
-      "id": "q2",
-      "title": "아직 없음 예시",
-      "tags": ["한국사", "단답형"],
-      "file": "data/no_example.json"
-    },
-    {
       "id": "q3",
       "title": "HTTP 상태 코드",
       "tags": ["정보보호론", "단답형"],
       "file": "data/http_status_code.json"
+    },
+    {
+      "id": "q4",
+      "title": "개인정보영향평가(IPA) 분야별 평가영역 맞추기",
+      "tags": ["정보보호론", "오지선다"],
+      "file": "data/ipa.json"
+    },
+    {
+      "id": "q5",
+      "title": "ISMS-P 영역 맞추기",
+      "tags": ["정보보호론", "삼지선다"],
+      "file": "data/isms_p.json"
+    },
+    {
+      "id": "q6",
+      "title": "TCSEC 등급 맞추기",
+      "tags": ["정보보호론", "칠지선다"],
+      "file": "data/tcsec_1.json"
+    },
+    {
+      "id": "q7",
+      "title": "TCSEC 설명 맞추기",
+      "tags": ["정보보호론", "칠지선다"],
+      "file": "data/tcsec_2.json"
+    },
+    {
+      "id": "q8",
+      "title": "접근통제 모델 맞추기",
+      "tags": ["정보보호론", "칠지선다"],
+      "file": "data/access_control.json"
+    },
+    {
+      "id": "q9",
+      "title": "ISO 7계층 맞추기",
+      "tags": ["정보보호론", "칠지선다"],
+      "file": "data/iso.json"
+    },
+    {
+      "id": "q10000",
+      "title": "샘플",
+      "tags": ["정보보호론", "N지선다"],
+      "file": "data/_.json"
     }
   ]
 }
